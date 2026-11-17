@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "764451121814",
+    "project_id": "social-bridge-161126",
+    "storage_bucket": "social-bridge-161126.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:764451121814:android:4af58adae90bfba43070b7",
+        "android_client_info": {
+          "package_name": "com.cavernlabs.social.bridge.social_bridge_example"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "764451121814-ma1671l52nlu5ss4gv0ftlgdt12up54e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYgjUPthCv4fXE8OGzTtiosP_GIwEFGxo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "764451121814-ma1671l52nlu5ss4gv0ftlgdt12up54e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

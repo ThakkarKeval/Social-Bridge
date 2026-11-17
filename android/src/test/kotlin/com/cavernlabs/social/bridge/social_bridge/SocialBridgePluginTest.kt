@@ -6,22 +6,47 @@ import org.mockito.Mockito
 import kotlin.test.Test
 
 /*
- * This demonstrates a simple unit test of the Kotlin portion of this plugin's implementation.
- *
- * Once you have built the plugin's example app, you can run these tests from the command
- * line by running `./gradlew testDebugUnitTest` in the `example/android/` directory, or
- * you can run them directly from IDEs that support JUnit such as Android Studio.
+ * Unit tests for SocialBridgePlugin method call handling.
  */
-
 internal class SocialBridgePluginTest {
     @Test
-    fun onMethodCall_getPlatformVersion_returnsExpectedValue() {
+    fun onMethodCall_unknownMethod_returnsNotImplemented() {
         val plugin = SocialBridgePlugin()
 
-        val call = MethodCall("getPlatformVersion", null)
+        val call = MethodCall("unknownMethod", null)
         val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
         plugin.onMethodCall(call, mockResult)
 
-        Mockito.verify(mockResult).success("Android " + android.os.Build.VERSION.RELEASE)
+        Mockito.verify(mockResult).notImplemented()
+    }
+
+    @Test
+    fun onMethodCall_signInWithGoogle_withoutActivity_returnsNoActivityError() {
+        val plugin = SocialBridgePlugin()
+
+        val call = MethodCall("signInWithGoogle", mapOf("serverClientId" to "test-client-id"))
+        val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
+        plugin.onMethodCall(call, mockResult)
+
+        Mockito.verify(mockResult).error(
+            Mockito.eq("NO_ACTIVITY"),
+            Mockito.anyString(),
+            Mockito.isNull()
+        )
+    }
+
+    @Test
+    fun onMethodCall_signInWithApple_withoutActivity_returnsNoActivityError() {
+        val plugin = SocialBridgePlugin()
+
+        val call = MethodCall("signInWithApple", null)
+        val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
+        plugin.onMethodCall(call, mockResult)
+
+        Mockito.verify(mockResult).error(
+            Mockito.eq("NO_ACTIVITY"),
+            Mockito.anyString(),
+            Mockito.isNull()
+        )
     }
 }

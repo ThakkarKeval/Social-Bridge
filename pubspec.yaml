@@ -1,7 +1,12 @@
 name: social_bridge
-description: "A new Flutter plugin project."
+description: "A modern social authentication Flutter plugin supporting Google (Credential Manager) and Apple sign-in."
 version: 0.0.1
-homepage:
+homepage: https://github.com/ThakkarKeval/Social-Bridge
+repository: https://github.com/ThakkarKeval/Social-Bridge
+
+false_secrets:
+  - /example/android/app/google-services.json
+  - /example/lib/main.dart
 
 environment:
   sdk: ^3.13.7

@@ -22,21 +22,17 @@ using flutter::MethodResultFunctions;
 
 }  // namespace
 
-TEST(SocialBridgePlugin, GetPlatformVersion) {
+TEST(SocialBridgePlugin, UnhandledMethodReturnsNotImplemented) {
   SocialBridgePlugin plugin;
-  // Save the reply value from the success callback.
-  std::string result_string;
+  bool not_implemented = false;
   plugin.HandleMethodCall(
-      MethodCall("getPlatformVersion", std::make_unique<EncodableValue>()),
+      MethodCall("unhandledMethod", std::make_unique<EncodableValue>()),
       std::make_unique<MethodResultFunctions<>>(
-          [&result_string](const EncodableValue* result) {
-            result_string = std::get<std::string>(*result);
-          },
-          nullptr, nullptr));
-
-  // Since the exact string varies by host, just ensure that it's a string
-  // with the expected format.
-  EXPECT_TRUE(result_string.rfind("Windows ", 0) == 0);
+          nullptr, nullptr,
+          [&not_implemented]() {
+            not_implemented = true;
+          }));
+  EXPECT_TRUE(not_implemented);
 }
 
 }  // namespace test
