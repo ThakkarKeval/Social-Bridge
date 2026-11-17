@@ -1,3 +1,9 @@
+## 0.0.2
+
+* Updated LICENSE file with MIT License.
+* Added repository and false_secrets configuration for clean pub.dev publishing.
+* Enhanced Credential Manager session clearing on sign-out.
+
 ## 0.0.1
 
 * Initial release of `social_bridge`.

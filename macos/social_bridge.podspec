@@ -4,12 +4,12 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'social_bridge'
-  s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.version          = '0.0.2'
+  s.summary          = 'A modern social authentication Flutter plugin supporting Google and Apple sign-in.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+A modern social authentication Flutter plugin supporting Google and Apple sign-in.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/ThakkarKeval/Social-Bridge'
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
 
