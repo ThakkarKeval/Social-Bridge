@@ -5,7 +5,9 @@ import 'social_bridge_platform_interface.dart';
 import 'src/models/social_auth_exception.dart';
 import 'src/models/social_auth_result.dart';
 
+/// An implementation of [SocialBridgePlatform] that uses method channels.
 class MethodChannelSocialBridge extends SocialBridgePlatform {
+  /// The method channel used to interact with the native platform.
   @visibleForTesting
   final methodChannel = const MethodChannel('social_bridge');
 

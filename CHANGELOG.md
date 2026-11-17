@@ -1,3 +1,9 @@
+## 0.0.3
+
+* Added comprehensive dartdoc documentation comments across all public APIs.
+* Fixed link formatting in README.
+* Bumped version and updated repository metadata.
+
 ## 0.0.2
 
 * Updated LICENSE file with MIT License.

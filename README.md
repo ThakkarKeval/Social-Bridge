@@ -4,7 +4,7 @@ A modern, lightweight Flutter plugin for social authentication.
 
 - **Google Sign-In**: Powered by the modern **Android Credential Manager** (`androidx.credentials` + `GoogleIdTokenCredential`), replacing deprecated legacy sign-in clients.
 - **Apple Sign-In**: Integrated with **Firebase Auth OAuthProvider** on Android and native **AuthenticationServices** on iOS.
-- **Decoupled Architecture**: Returns raw tokens (`idToken`, `accessToken`, etc.) in a unified [`SocialAuthResult`](class://SocialAuthResult) for use with custom backends or Firebase Auth.
+- **Decoupled Architecture**: Returns raw tokens (`idToken`, `accessToken`, etc.) in a unified `SocialAuthResult` for use with custom backends or Firebase Auth.
 
 ---
 

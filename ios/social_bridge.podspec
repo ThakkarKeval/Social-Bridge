@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'social_bridge'
-  s.version          = '0.0.2'
+  s.version          = '0.0.3'
   s.summary          = 'A modern social authentication Flutter plugin supporting Google and Apple sign-in.'
   s.description      = <<-DESC
 A modern social authentication Flutter plugin supporting Google and Apple sign-in.
