@@ -1,52 +1,41 @@
 package com.cavernlabs.social.bridge.social_bridge
 
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
-import org.mockito.Mockito
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /*
- * Unit tests for SocialBridgePlugin method call handling.
+ * Unit tests for SocialBridgePlugin Pigeon host API handling.
  */
 internal class SocialBridgePluginTest {
     @Test
-    fun onMethodCall_unknownMethod_returnsNotImplemented() {
+    fun signInWithGoogle_withoutActivity_throwsFlutterError() {
         val plugin = SocialBridgePlugin()
+        val request = GoogleSignInRequest(
+            serverClientId = "test-client-id",
+            nonce = null,
+            filterByAuthorizedAccounts = false
+        )
 
-        val call = MethodCall("unknownMethod", null)
-        val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
-        plugin.onMethodCall(call, mockResult)
-
-        Mockito.verify(mockResult).notImplemented()
+        val exception = assertFailsWith<FlutterError> {
+            runBlocking {
+                plugin.signInWithGoogle(request)
+            }
+        }
+        assertEquals("NO_ACTIVITY", exception.code)
     }
 
     @Test
-    fun onMethodCall_signInWithGoogle_withoutActivity_returnsNoActivityError() {
+    fun signInWithApple_withoutActivity_throwsFlutterError() {
         val plugin = SocialBridgePlugin()
+        val request = AppleSignInRequest(scopes = null)
 
-        val call = MethodCall("signInWithGoogle", mapOf("serverClientId" to "test-client-id"))
-        val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
-        plugin.onMethodCall(call, mockResult)
-
-        Mockito.verify(mockResult).error(
-            Mockito.eq("NO_ACTIVITY"),
-            Mockito.anyString(),
-            Mockito.isNull()
-        )
-    }
-
-    @Test
-    fun onMethodCall_signInWithApple_withoutActivity_returnsNoActivityError() {
-        val plugin = SocialBridgePlugin()
-
-        val call = MethodCall("signInWithApple", null)
-        val mockResult: MethodChannel.Result = Mockito.mock(MethodChannel.Result::class.java)
-        plugin.onMethodCall(call, mockResult)
-
-        Mockito.verify(mockResult).error(
-            Mockito.eq("NO_ACTIVITY"),
-            Mockito.anyString(),
-            Mockito.isNull()
-        )
+        val exception = assertFailsWith<FlutterError> {
+            runBlocking {
+                plugin.signInWithApple(request)
+            }
+        }
+        assertEquals("NO_ACTIVITY", exception.code)
     }
 }

@@ -1,58 +1,67 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:social_bridge/social_bridge.dart';
 import 'package:social_bridge/social_bridge_method_channel.dart';
+import 'package:social_bridge/src/messages.g.dart';
+
+class MockSocialBridgeHostApi implements SocialBridgeHostApi {
+  @override
+  BinaryMessenger? get pigeonVar_binaryMessenger => null;
+
+  @override
+  String get pigeonVar_messageChannelSuffix => '';
+
+  @override
+  Future<NativeSocialAuthResult> signInWithGoogle(
+      GoogleSignInRequest request) async {
+    if (request.serverClientId == 'error-client-id') {
+      throw PlatformException(
+        code: 'CREDENTIAL_ERROR',
+        message: 'Google Sign-In failed.',
+      );
+    }
+    if (request.serverClientId == 'cancel-client-id') {
+      throw PlatformException(
+        code: 'CANCELLED',
+        message: 'User cancelled Google Sign-In.',
+      );
+    }
+    return NativeSocialAuthResult(
+      provider: 'google',
+      idToken: 'mock-id-token',
+      email: 'test@gmail.com',
+      displayName: 'Test User',
+      userIdentifier: 'google-123',
+    );
+  }
+
+  @override
+  Future<NativeSocialAuthResult> signInWithApple(
+      AppleSignInRequest request) async {
+    return NativeSocialAuthResult(
+      provider: 'apple',
+      idToken: 'mock-apple-id-token',
+      email: 'apple@example.com',
+      displayName: 'Apple User',
+      userIdentifier: 'apple-123',
+    );
+  }
+
+  @override
+  Future<void> signOut() async {}
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  final platform = MethodChannelSocialBridge();
-  const channel = MethodChannel('social_bridge');
+  late MethodChannelSocialBridge platform;
+  late MockSocialBridgeHostApi mockApi;
 
   setUp(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, (MethodCall methodCall) async {
-          switch (methodCall.method) {
-            case 'signInWithGoogle':
-              final args = methodCall.arguments as Map;
-              if (args['serverClientId'] == 'error-client-id') {
-                throw PlatformException(
-                  code: 'CREDENTIAL_ERROR',
-                  message: 'Google Sign-In failed.',
-                );
-              }
-              if (args['serverClientId'] == 'cancel-client-id') {
-                throw PlatformException(
-                  code: 'CANCELLED',
-                  message: 'User cancelled Google Sign-In.',
-                );
-              }
-              return {
-                'provider': 'google',
-                'idToken': 'mock-id-token',
-                'email': 'test@gmail.com',
-                'displayName': 'Test User',
-                'userIdentifier': 'google-123',
-              };
-            case 'signInWithApple':
-              return {
-                'provider': 'apple',
-                'idToken': 'mock-apple-id-token',
-                'email': 'apple@example.com',
-                'displayName': 'Apple User',
-                'userIdentifier': 'apple-123',
-              };
-            case 'signOut':
-              return null;
-            default:
-              return null;
-          }
-        });
-  });
-
-  tearDown(() {
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(channel, null);
+    mockApi = MockSocialBridgeHostApi();
+    platform = MethodChannelSocialBridge(hostApi: mockApi);
   });
 
   test('signInWithGoogle success', () async {

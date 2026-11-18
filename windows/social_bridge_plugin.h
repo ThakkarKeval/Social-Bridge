@@ -1,14 +1,14 @@
 #ifndef FLUTTER_PLUGIN_SOCIAL_BRIDGE_PLUGIN_H_
 #define FLUTTER_PLUGIN_SOCIAL_BRIDGE_PLUGIN_H_
 
-#include <flutter/method_channel.h>
 #include <flutter/plugin_registrar_windows.h>
-
 #include <memory>
+
+#include "messages.g.h"
 
 namespace social_bridge {
 
-class SocialBridgePlugin : public flutter::Plugin {
+class SocialBridgePlugin : public flutter::Plugin, public SocialBridgeHostApi {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows *registrar);
 
@@ -20,10 +20,15 @@ class SocialBridgePlugin : public flutter::Plugin {
   SocialBridgePlugin(const SocialBridgePlugin&) = delete;
   SocialBridgePlugin& operator=(const SocialBridgePlugin&) = delete;
 
-  // Called when a method is called on this plugin's channel from Dart.
-  void HandleMethodCall(
-      const flutter::MethodCall<flutter::EncodableValue> &method_call,
-      std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
+  // SocialBridgeHostApi implementation:
+  void SignInWithGoogle(
+      const GoogleSignInRequest& request,
+      std::function<void(ErrorOr<NativeSocialAuthResult> reply)> result) override;
+  void SignInWithApple(
+      const AppleSignInRequest& request,
+      std::function<void(ErrorOr<NativeSocialAuthResult> reply)> result) override;
+  void SignOut(
+      std::function<void(std::optional<FlutterError> reply)> result) override;
 };
 
 }  // namespace social_bridge

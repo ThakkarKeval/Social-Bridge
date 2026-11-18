@@ -2,43 +2,46 @@ import AuthenticationServices
 import Flutter
 import UIKit
 
-public class SocialBridgePlugin: NSObject, FlutterPlugin, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
-  private var pendingResult: FlutterResult?
+public class SocialBridgePlugin: NSObject, FlutterPlugin, SocialBridgeHostApi, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+  private var appleContinuation: CheckedContinuation<NativeSocialAuthResult, Error>?
 
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "social_bridge", binaryMessenger: registrar.messenger())
     let instance = SocialBridgePlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
+    SocialBridgeHostApiSetup.setUp(binaryMessenger: registrar.messenger(), api: instance)
   }
 
-  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    switch call.method {
-    case "signInWithApple":
-      signInWithApple(result: result)
-    case "signInWithGoogle":
-      result(FlutterError(code: "UNSUPPORTED_PLATFORM", message: "Google Sign-In on iOS requires platform setup.", details: nil))
-    case "signOut":
-      result(nil)
-    default:
-      result(FlutterMethodNotImplemented)
+  public func signInWithGoogle(request: GoogleSignInRequest) async throws -> NativeSocialAuthResult {
+    throw PigeonError(code: "UNSUPPORTED_PLATFORM", message: "Google Sign-In on iOS requires platform setup.", details: nil)
+  }
+
+  public func signInWithApple(request: AppleSignInRequest) async throws -> NativeSocialAuthResult {
+    guard appleContinuation == nil else {
+      throw PigeonError(code: "CONCURRENT_REQUEST", message: "An authentication request is already in progress.", details: nil)
+    }
+
+    return try await withCheckedThrowingContinuation { continuation in
+      self.appleContinuation = continuation
+
+      let provider = ASAuthorizationAppleIDProvider()
+      let authRequest = provider.createRequest()
+      var requestedScopes: [ASAuthorization.Scope] = []
+      if let scopes = request.scopes {
+        if scopes.contains("email") { requestedScopes.append(.email) }
+        if scopes.contains("name") || scopes.contains("fullName") { requestedScopes.append(.fullName) }
+      } else {
+        requestedScopes = [.fullName, .email]
+      }
+      authRequest.requestedScopes = requestedScopes
+
+      let controller = ASAuthorizationController(authorizationRequests: [authRequest])
+      controller.delegate = self
+      controller.presentationContextProvider = self
+      controller.performRequests()
     }
   }
 
-  private func signInWithApple(result: @escaping FlutterResult) {
-    guard pendingResult == nil else {
-      result(FlutterError(code: "CONCURRENT_REQUEST", message: "An authentication request is already in progress.", details: nil))
-      return
-    }
-    pendingResult = result
-
-    let provider = ASAuthorizationAppleIDProvider()
-    let request = provider.createRequest()
-    request.requestedScopes = [.fullName, .email]
-
-    let controller = ASAuthorizationController(authorizationRequests: [request])
-    controller.delegate = self
-    controller.presentationContextProvider = self
-    controller.performRequests()
+  public func signOut() async throws {
+    // No-op on iOS
   }
 
   public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
@@ -51,8 +54,8 @@ public class SocialBridgePlugin: NSObject, FlutterPlugin, ASAuthorizationControl
 
   public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
     guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
-      pendingResult?(FlutterError(code: "INVALID_CREDENTIAL", message: "Expected Apple ID credential.", details: nil))
-      pendingResult = nil
+      appleContinuation?.resume(throwing: PigeonError(code: "INVALID_CREDENTIAL", message: "Expected Apple ID credential.", details: nil))
+      appleContinuation = nil
       return
     }
 
@@ -67,18 +70,18 @@ public class SocialBridgePlugin: NSObject, FlutterPlugin, ASAuthorizationControl
       }
     }
 
-    let authData: [String: Any?] = [
-      "provider": "apple",
-      "idToken": idToken,
-      "accessToken": authCode,
-      "email": appleIDCredential.email,
-      "displayName": displayName,
-      "photoUrl": nil,
-      "userIdentifier": appleIDCredential.user
-    ]
+    let result = NativeSocialAuthResult(
+      provider: "apple",
+      idToken: idToken,
+      accessToken: authCode,
+      email: appleIDCredential.email,
+      displayName: displayName,
+      userIdentifier: appleIDCredential.user,
+      photoUrl: nil
+    )
 
-    pendingResult?(authData)
-    pendingResult = nil
+    appleContinuation?.resume(returning: result)
+    appleContinuation = nil
   }
 
   public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
@@ -89,7 +92,7 @@ public class SocialBridgePlugin: NSObject, FlutterPlugin, ASAuthorizationControl
     } else {
       code = "FAILED"
     }
-    pendingResult?(FlutterError(code: code, message: error.localizedDescription, details: nil))
-    pendingResult = nil
+    appleContinuation?.resume(throwing: PigeonError(code: code, message: error.localizedDescription, details: nil))
+    appleContinuation = nil
   }
 }

@@ -14,6 +14,8 @@ set(PLUGIN_NAME "social_bridge_plugin")
 # Any new source files that you add to the plugin should be added here.
 list(APPEND PLUGIN_SOURCES
   "social_bridge_plugin.cc"
+  "messages.g.cc"
+  "messages.g.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment

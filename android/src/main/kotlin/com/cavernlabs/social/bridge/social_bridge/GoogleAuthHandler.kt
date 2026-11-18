@@ -8,83 +8,73 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import io.flutter.plugin.common.MethodChannel.Result
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import java.security.MessageDigest
 import java.util.UUID
 
 /*
  * Handles Google Sign-In using Android Credential Manager.
  */
-class GoogleAuthHandler(
-    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main)
-) {
+class GoogleAuthHandler {
 
-    fun signIn(
+    suspend fun signIn(
         activity: Activity,
-        serverClientId: String,
-        nonce: String?,
-        filterByAuthorizedAccounts: Boolean,
-        result: Result
-    ) {
-        scope.launch {
-            try {
-                val resolvedNonce = if (nonce.isNullOrBlank()) generateNonce() else nonce
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(filterByAuthorizedAccounts)
-                    .setServerClientId(serverClientId)
-                    .setNonce(resolvedNonce)
-                    .build()
+        request: GoogleSignInRequest
+    ): NativeSocialAuthResult {
+        try {
+            val resolvedNonce = if (request.nonce.isNullOrBlank()) generateNonce() else request.nonce
+            val googleIdOption = GetGoogleIdOption.Builder()
+                .setFilterByAuthorizedAccounts(request.filterByAuthorizedAccounts)
+                .setServerClientId(request.serverClientId)
+                .setNonce(resolvedNonce)
+                .build()
 
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
+            val credentialRequest = GetCredentialRequest.Builder()
+                .addCredentialOption(googleIdOption)
+                .build()
 
-                val credentialManager = CredentialManager.create(activity)
-                val response = credentialManager.getCredential(
-                    request = request,
-                    context = activity
-                )
+            val credentialManager = CredentialManager.create(activity)
+            val response = credentialManager.getCredential(
+                request = credentialRequest,
+                context = activity
+            )
 
-                when (val credential = response.credential) {
-                    is CustomCredential -> {
-                        if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                            val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data)
-                            val authData = mapOf(
-                                "provider" to "google",
-                                "idToken" to googleIdToken.idToken,
-                                "accessToken" to null,
-                                "email" to googleIdToken.id,
-                                "displayName" to googleIdToken.displayName,
-                                "photoUrl" to googleIdToken.profilePictureUri?.toString(),
-                                "userIdentifier" to googleIdToken.id
-                            )
-                            result.success(authData)
-                        } else {
-                            result.error(
-                                "UNSUPPORTED_CREDENTIAL",
-                                "Unexpected credential type: ${credential.type}",
-                                null
-                            )
-                        }
-                    }
-                    else -> {
-                        result.error(
+            when (val credential = response.credential) {
+                is CustomCredential -> {
+                    if (credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                        val googleIdToken = GoogleIdTokenCredential.createFrom(credential.data)
+                        return NativeSocialAuthResult(
+                            provider = "google",
+                            idToken = googleIdToken.idToken,
+                            accessToken = null,
+                            email = googleIdToken.id,
+                            displayName = googleIdToken.displayName,
+                            photoUrl = googleIdToken.profilePictureUri?.toString(),
+                            userIdentifier = googleIdToken.id
+                        )
+                    } else {
+                        throw FlutterError(
                             "UNSUPPORTED_CREDENTIAL",
-                            "Credential not recognized",
+                            "Unexpected credential type: ${credential.type}",
                             null
                         )
                     }
                 }
-            } catch (e: GetCredentialCancellationException) {
-                result.error("CANCELLED", "User cancelled Google Sign-In.", null)
-            } catch (e: GetCredentialException) {
-                result.error("CREDENTIAL_ERROR", e.localizedMessage ?: "Google Sign-In failed.", null)
-            } catch (e: Exception) {
-                result.error("FAILED", e.localizedMessage ?: "Google Sign-In failed.", null)
+                else -> {
+                    throw FlutterError(
+                        "UNSUPPORTED_CREDENTIAL",
+                        "Credential not recognized",
+                        null
+                    )
+                }
             }
+        } catch (e: GetCredentialCancellationException) {
+            throw FlutterError("CANCELLED", "User cancelled Google Sign-In.", null)
+        } catch (e: GetCredentialException) {
+            throw FlutterError("CREDENTIAL_ERROR", e.localizedMessage ?: "Google Sign-In failed.", null)
+        } catch (e: FlutterError) {
+            throw e
+        } catch (e: Exception) {
+            throw FlutterError("FAILED", e.localizedMessage ?: "Google Sign-In failed.", null)
         }
     }
 

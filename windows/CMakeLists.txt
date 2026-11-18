@@ -20,6 +20,8 @@ set(PLUGIN_NAME "social_bridge_plugin")
 list(APPEND PLUGIN_SOURCES
   "social_bridge_plugin.cpp"
   "social_bridge_plugin.h"
+  "messages.g.cpp"
+  "messages.g.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment
