@@ -1,3 +1,11 @@
+## 0.1.0
+
+* Migrated native platform channels to Pigeon for type-safe cross-platform communication across Android, iOS, macOS, Windows, and Linux.
+* Updated Android implementation to use Kotlin coroutines with Pigeon host API.
+* Updated iOS and macOS implementations to use Swift async/await with Pigeon host API.
+* Added Windows (C++) and Linux (GObject) native Pigeon bindings.
+* Added `meta` dependency to support generated annotations.
+
 ## 0.0.3
 
 * Added comprehensive dartdoc documentation comments across all public APIs.
